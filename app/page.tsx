@@ -45,16 +45,15 @@ export default function HomePage() {
               <Sparkles size={16} /> Trust-first matrimony for modern families
             </span>
             <h1 className="mt-6 max-w-3xl text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
-              MaitriMilan
+              Find Your Perfect Life Partner
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-white/85">
-              Meet serious, verified marriage prospects through a respectful platform built around profile review,
-              request-based communication, and clear annual membership.
+              Join trusted and verified profiles to discover meaningful matches.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <ButtonLink href="/auth/register">Create verified profile</ButtonLink>
-              <ButtonLink href="/profiles" className="bg-white text-ink hover:bg-stone-100">
-                Browse profiles
+              <ButtonLink href="/register">Register Free</ButtonLink>
+              <ButtonLink href="/login" className="bg-white text-ink hover:bg-stone-100">
+                Login
               </ButtonLink>
             </div>
             <div className="mt-8 grid gap-3 text-sm font-medium text-stone-700 sm:grid-cols-3">
@@ -97,6 +96,26 @@ export default function HomePage() {
           ))}
         </div>
       </Section>
+
+      <section className="bg-white">
+        <Section>
+          <div className="grid gap-5 md:grid-cols-4">
+            {[
+              ["Verified Profiles", "/images/verified-profiles.jpg"],
+              ["Find Perfect Match", "/images/couple-match.jpg"],
+              ["Safe & Secure Chat", "/trust-2.svg"],
+              ["Community-Based Matches", "/images/family-trust.jpg"]
+            ].map(([title, src]) => (
+              <Card key={title} className="overflow-hidden p-0">
+                <img src={src} alt={title} className="h-40 w-full object-cover" />
+                <div className="p-4">
+                  <h3 className="font-black text-ink">{title}</h3>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </Section>
+      </section>
 
       <section className="bg-lotus">
         <Section>
