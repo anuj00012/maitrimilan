@@ -27,20 +27,39 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Signature mismatch" }, { status: 400 });
   }
 
-  const expiresAt = new Date();
-  expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("*, plans(*)")
+    .eq("user_id", user.id)
+    .eq("razorpay_order_id", razorpay_order_id)
+    .maybeSingle();
+
+  if (!payment?.plans) return NextResponse.json({ error: "Payment order not found" }, { status: 404 });
+
+  const startDate = new Date();
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + payment.plans.duration_days);
 
   await supabase
-    .from("subscriptions")
+    .from("payments")
     .update({
-      status: "active",
+      status: "paid",
       razorpay_payment_id,
-      razorpay_signature,
-      starts_at: new Date().toISOString(),
-      expires_at: expiresAt.toISOString()
+      razorpay_signature
     })
     .eq("user_id", user.id)
     .eq("razorpay_order_id", razorpay_order_id);
+
+  await supabase.from("subscriptions").insert({
+    user_id: user.id,
+    plan_id: payment.plan_id,
+    status: "active",
+    start_date: startDate.toISOString(),
+    end_date: endDate.toISOString(),
+    contact_unlocks_used: 0,
+    interests_used: 0,
+    last_limit_reset_date: startDate.toISOString()
+  });
 
   return NextResponse.json({ ok: true });
 }

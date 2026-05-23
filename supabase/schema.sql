@@ -47,6 +47,16 @@ create table if not exists public.users (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.plans (
+  id text primary key,
+  name text not null,
+  price integer not null,
+  duration_days integer not null,
+  contact_unlock_limit integer not null,
+  interest_limit integer not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.profiles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null unique references public.users(id) on delete cascade,
@@ -107,6 +117,28 @@ create table if not exists public.subscriptions (
   created_at timestamptz not null default now()
 );
 
+alter table public.subscriptions add column if not exists plan_id text references public.plans(id);
+alter table public.subscriptions add column if not exists start_date timestamptz;
+alter table public.subscriptions add column if not exists end_date timestamptz;
+alter table public.subscriptions add column if not exists contact_unlocks_used integer not null default 0;
+alter table public.subscriptions add column if not exists interests_used integer not null default 0;
+alter table public.subscriptions add column if not exists last_limit_reset_date timestamptz;
+alter table public.subscriptions add column if not exists updated_at timestamptz not null default now();
+alter table public.subscriptions alter column amount drop not null;
+
+create table if not exists public.payments (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  plan_id text not null references public.plans(id),
+  razorpay_order_id text not null unique,
+  razorpay_payment_id text,
+  razorpay_signature text,
+  amount integer not null,
+  currency text not null default 'INR',
+  status text not null default 'created',
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.interests (
   id uuid primary key default gen_random_uuid(),
   sender_id uuid not null references public.users(id) on delete cascade,
@@ -147,6 +179,21 @@ create table if not exists public.reports (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.contact_unlocks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique(user_id, profile_id)
+);
+
+create table if not exists public.profile_views (
+  id uuid primary key default gen_random_uuid(),
+  viewer_id uuid references public.users(id) on delete set null,
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.admin_users (
   user_id uuid primary key references public.users(id) on delete cascade,
   created_at timestamptz not null default now()
@@ -183,7 +230,22 @@ create index if not exists interests_sender_idx on public.interests (sender_id, 
 create index if not exists interests_receiver_idx on public.interests (receiver_id, status);
 create index if not exists matches_users_idx on public.matches (user_one_id, user_two_id, status);
 create index if not exists messages_match_idx on public.messages (match_id, created_at);
-create index if not exists subscriptions_user_status_idx on public.subscriptions (user_id, status, expires_at);
+create index if not exists subscriptions_user_status_idx on public.subscriptions (user_id, status, end_date);
+create index if not exists payments_user_idx on public.payments (user_id, status, created_at);
+create index if not exists contact_unlocks_user_idx on public.contact_unlocks (user_id, created_at);
+create index if not exists profile_views_profile_idx on public.profile_views (profile_id, created_at);
+
+insert into public.plans (id, name, price, duration_days, contact_unlock_limit, interest_limit)
+values
+  ('basic_monthly', 'Basic Monthly', 29900, 30, 30, 100),
+  ('basic_3_months', 'Basic 3 Months', 69900, 90, 30, 100),
+  ('basic_6_months', 'Basic 6 Months', 99900, 180, 30, 100)
+on conflict (id) do update set
+  name = excluded.name,
+  price = excluded.price,
+  duration_days = excluded.duration_days,
+  contact_unlock_limit = excluded.contact_unlock_limit,
+  interest_limit = excluded.interest_limit;
 
 insert into storage.buckets (id, name, public)
 values

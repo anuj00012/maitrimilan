@@ -1,11 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 675">
   <rect width="900" height="675" fill="#faf3ef"/>
-  <circle cx="650" cy="165" r="170" fill="#f4a261" opacity=".35"/>
-  <circle cx="280" cy="220" r="125" fill="#b23a48" opacity=".18"/>
-  <rect x="130" y="190" width="640" height="330" rx="28" fill="#fff"/>
-  <path d="M280 430c68-104 185-104 252 0" fill="none" stroke="#b23a48" stroke-width="30" stroke-linecap="round"/>
-  <circle cx="345" cy="310" r="64" fill="#f4a261"/>
-  <circle cx="470" cy="310" r="64" fill="#476a52"/>
-  <path d="M392 325c25 28 57 28 82 0" fill="none" stroke="#302827" stroke-width="14" stroke-linecap="round" opacity=".35"/>
-  <path d="M225 535h450" stroke="#302827" stroke-width="16" stroke-linecap="round" opacity=".12"/>
+  <circle cx="700" cy="130" r="150" fill="#f4a261" opacity=".32"/>
+  <path d="M110 520h680" stroke="#b23a48" stroke-width="24" stroke-linecap="round" opacity=".25"/>
+  <rect x="145" y="170" width="610" height="330" rx="30" fill="#fff"/>
+  <path d="M210 235h480" stroke="#f4a261" stroke-width="14" stroke-linecap="round"/>
+  <path d="M250 432c72-95 160-95 232 0M420 432c72-95 160-95 232 0" fill="none" stroke="#b23a48" stroke-width="26" stroke-linecap="round"/>
+  <circle cx="335" cy="330" r="64" fill="#f4a261"/>
+  <circle cx="565" cy="330" r="64" fill="#476a52"/>
+  <path d="M391 355c38 28 80 28 118 0" fill="none" stroke="#302827" stroke-width="13" stroke-linecap="round" opacity=".35"/>
+  <g fill="#b23a48" opacity=".75">
+    <circle cx="275" cy="245" r="10"/><circle cx="335" cy="235" r="10"/><circle cx="395" cy="245" r="10"/>
+    <circle cx="455" cy="235" r="10"/><circle cx="515" cy="245" r="10"/><circle cx="575" cy="235" r="10"/>
+  </g>
 </svg>

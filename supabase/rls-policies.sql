@@ -2,11 +2,15 @@ alter table public.users enable row level security;
 alter table public.profiles enable row level security;
 alter table public.profile_photos enable row level security;
 alter table public.verification_documents enable row level security;
+alter table public.plans enable row level security;
 alter table public.subscriptions enable row level security;
+alter table public.payments enable row level security;
 alter table public.interests enable row level security;
 alter table public.matches enable row level security;
 alter table public.messages enable row level security;
 alter table public.reports enable row level security;
+alter table public.contact_unlocks enable row level security;
+alter table public.profile_views enable row level security;
 alter table public.admin_users enable row level security;
 
 create policy "users can read self and admins read all"
@@ -68,6 +72,10 @@ on public.verification_documents for update
 using (private.is_admin(auth.uid()))
 with check (private.is_admin(auth.uid()));
 
+create policy "plans are public to authenticated users"
+on public.plans for select
+using (auth.role() = 'authenticated');
+
 create policy "subscriptions visible to owner and admin"
 on public.subscriptions for select
 using (user_id = auth.uid() or private.is_admin(auth.uid()));
@@ -78,6 +86,19 @@ with check (user_id = auth.uid());
 
 create policy "users update own payment records"
 on public.subscriptions for update
+using (user_id = auth.uid() or private.is_admin(auth.uid()))
+with check (user_id = auth.uid() or private.is_admin(auth.uid()));
+
+create policy "payments visible to owner and admin"
+on public.payments for select
+using (user_id = auth.uid() or private.is_admin(auth.uid()));
+
+create policy "users create own payment orders"
+on public.payments for insert
+with check (user_id = auth.uid());
+
+create policy "users update own payment verification records"
+on public.payments for update
 using (user_id = auth.uid() or private.is_admin(auth.uid()))
 with check (user_id = auth.uid() or private.is_admin(auth.uid()));
 
@@ -93,7 +114,10 @@ with check (
     select 1 from public.subscriptions
     where subscriptions.user_id = auth.uid()
       and subscriptions.status = 'active'
-      and subscriptions.expires_at > now()
+      and subscriptions.end_date > now()
+      and subscriptions.interests_used < coalesce((
+        select plans.interest_limit from public.plans where plans.id = subscriptions.plan_id
+      ), 100)
   )
 );
 
@@ -146,6 +170,41 @@ create policy "admins manage reports"
 on public.reports for update
 using (private.is_admin(auth.uid()))
 with check (private.is_admin(auth.uid()));
+
+create policy "contact unlocks visible to owner and admin"
+on public.contact_unlocks for select
+using (user_id = auth.uid() or private.is_admin(auth.uid()));
+
+create policy "active subscribers unlock contacts"
+on public.contact_unlocks for insert
+with check (
+  user_id = auth.uid()
+  and exists (
+    select 1 from public.subscriptions
+    where subscriptions.user_id = auth.uid()
+      and subscriptions.status = 'active'
+      and subscriptions.end_date > now()
+      and subscriptions.contact_unlocks_used < coalesce((
+        select plans.contact_unlock_limit from public.plans where plans.id = subscriptions.plan_id
+      ), 30)
+  )
+);
+
+create policy "profile views visible to viewer profile owner and admin"
+on public.profile_views for select
+using (
+  viewer_id = auth.uid()
+  or private.is_admin(auth.uid())
+  or exists (
+    select 1 from public.profiles
+    where profiles.id = profile_views.profile_id
+      and profiles.user_id = auth.uid()
+  )
+);
+
+create policy "authenticated users record profile views"
+on public.profile_views for insert
+with check (viewer_id = auth.uid());
 
 create policy "admins can read admin list"
 on public.admin_users for select

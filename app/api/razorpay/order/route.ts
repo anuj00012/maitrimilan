@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { BASIC_PLANS } from "@/lib/plans";
 
-const AMOUNT_IN_PAISE = 499900;
-
-export async function POST() {
+export async function POST(request: Request) {
   const supabase = createServerSupabase();
   const {
     data: { user }
   } = await supabase.auth.getUser();
 
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { planId } = await request.json().catch(() => ({ planId: "" }));
+  const { data: dbPlan } = await supabase.from("plans").select("*").eq("id", planId).maybeSingle();
+  const plan = dbPlan || BASIC_PLANS.find((item) => item.id === planId);
+  if (!plan) return NextResponse.json({ error: "Invalid plan selected" }, { status: 400 });
 
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -22,24 +26,24 @@ export async function POST() {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      amount: AMOUNT_IN_PAISE,
+      amount: plan.price,
       currency: "INR",
       receipt: `maitrimilan_${user.id}_${Date.now()}`,
-      notes: { user_id: user.id, plan: "premium_annual" }
+      notes: { user_id: user.id, plan_id: plan.id, plan_name: plan.name }
     })
   });
 
   const order = await response.json();
   if (!response.ok) return NextResponse.json(order, { status: response.status });
 
-  await supabase.from("subscriptions").insert({
+  await supabase.from("payments").insert({
     user_id: user.id,
-    plan: "premium_annual",
+    plan_id: plan.id,
     status: "created",
-    amount: AMOUNT_IN_PAISE,
+    amount: plan.price,
     currency: "INR",
     razorpay_order_id: order.id
   });
 
-  return NextResponse.json(order);
+  return NextResponse.json({ ...order, plan });
 }

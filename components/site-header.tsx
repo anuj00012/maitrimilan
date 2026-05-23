@@ -3,6 +3,7 @@ import { HeartHandshake, ShieldCheck } from "lucide-react";
 
 const navItems = [
   { href: "/profiles", label: "Profiles" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/requests", label: "Requests" },
   { href: "/subscription", label: "Membership" },
   { href: "/admin", label: "Admin" }

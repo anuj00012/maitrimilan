@@ -20,7 +20,7 @@ function loadRazorpay() {
   });
 }
 
-export function PaymentButton({ userEmail }: { userEmail?: string | null }) {
+export function PaymentButton({ planId, userEmail }: { planId: string; userEmail?: string | null }) {
   const [loading, setLoading] = useState(false);
 
   async function startPayment() {
@@ -32,8 +32,17 @@ export function PaymentButton({ userEmail }: { userEmail?: string | null }) {
       return;
     }
 
-    const orderResponse = await fetch("/api/razorpay/order", { method: "POST" });
+    const orderResponse = await fetch("/api/razorpay/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planId })
+    });
     const order = await orderResponse.json();
+    if (!orderResponse.ok) {
+      setLoading(false);
+      alert(order.error || "Could not create payment order.");
+      return;
+    }
     const Razorpay = window.Razorpay;
     if (!Razorpay) {
       setLoading(false);
@@ -46,7 +55,7 @@ export function PaymentButton({ userEmail }: { userEmail?: string | null }) {
       amount: order.amount,
       currency: order.currency,
       name: "MaitriMilan",
-      description: "1-year premium membership",
+      description: order.plan?.name || "MaitriMilan membership",
       order_id: order.id,
       prefill: { email: userEmail || "" },
       theme: { color: "#B23A48" },
@@ -56,7 +65,7 @@ export function PaymentButton({ userEmail }: { userEmail?: string | null }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(response)
         });
-        if (verifyResponse.ok) window.location.href = "/subscription?message=Membership activated.";
+        if (verifyResponse.ok) window.location.href = "/dashboard?message=Membership activated.";
         else alert("Payment verification failed. Please contact support.");
       },
       modal: {
