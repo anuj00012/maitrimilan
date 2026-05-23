@@ -12,20 +12,30 @@ export default function RegisterPage() {
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    const form = new FormData(event.currentTarget);
-    const response = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.get("name"),
-        email: form.get("email"),
-        password: form.get("password")
-      })
-    });
-    const data = await response.json();
-    setLoading(false);
-    setMessage(data.message);
-    if (response.ok) setTimeout(() => router.push("/login?registered=true"), 1200);
+    setMessage("");
+    try {
+      const form = new FormData(event.currentTarget);
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 15000);
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.get("name"),
+          email: form.get("email"),
+          password: form.get("password")
+        }),
+        signal: controller.signal
+      });
+      window.clearTimeout(timeout);
+      const data = await response.json();
+      setMessage(data.message);
+      if (response.ok) setTimeout(() => router.push("/login?registered=true"), 1200);
+    } catch {
+      setMessage("Registration service is not ready. Add DATABASE_URL and run the custom auth SQL in Supabase.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

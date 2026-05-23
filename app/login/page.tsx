@@ -19,23 +19,33 @@ export default function LoginPage() {
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    const form = new FormData(event.currentTarget);
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: form.get("email"),
-        password: form.get("password")
-      })
-    });
-    const data = await response.json();
-    setLoading(false);
-    if (!response.ok) {
-      setMessage(data.message);
-      return;
+    setMessage("");
+    try {
+      const form = new FormData(event.currentTarget);
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 15000);
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.get("email"),
+          password: form.get("password")
+        }),
+        signal: controller.signal
+      });
+      window.clearTimeout(timeout);
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(data.message);
+        return;
+      }
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setMessage("Login service is not ready. Check DATABASE_URL and database tables.");
+    } finally {
+      setLoading(false);
     }
-    router.push("/dashboard");
-    router.refresh();
   }
 
   return (
