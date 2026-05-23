@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2, HeartHandshake, LockKeyhole, MessageCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { ButtonLink, Card, Section } from "@/components/ui";
+import { blogPosts, testimonials } from "@/lib/content";
 
 const features = [
   {
@@ -152,17 +153,44 @@ export default function HomePage() {
               </div>
             </div>
             <div className="grid gap-4">
-              {["Their families connected after both sides accepted the request.", "Verified documents helped everyone feel more comfortable.", "The annual plan kept conversations focused and intentional."].map(
-                (story) => (
-                  <Card key={story} className="shadow-none">
-                    <p className="text-stone-700">{story}</p>
+              {testimonials.map((story) => (
+                  <Card key={story.names} className="shadow-none">
+                    <p className="text-sm font-semibold text-sindoor">{story.community}</p>
+                    <h3 className="mt-2 text-xl font-black text-ink">{story.names}</h3>
+                    <p className="mt-1 text-sm text-stone-500">{story.location}</p>
+                    <p className="mt-3 leading-7 text-stone-700">"{story.quote}"</p>
+                    <p className="mt-3 text-xs text-stone-500">{story.note}</p>
                   </Card>
-                )
-              )}
+              ))}
             </div>
           </div>
         </Section>
       </section>
+
+      <Section>
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <p className="font-semibold text-sindoor">MaitriMilan blog</p>
+            <h2 className="mt-3 text-3xl font-black text-ink">Indian marriage, culture, and safe matchmaking.</h2>
+          </div>
+          <ButtonLink href="/blog" className="bg-white text-ink hover:bg-stone-100">
+            Read all blogs
+          </ButtonLink>
+        </div>
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
+          {blogPosts.map((post) => (
+            <Link
+              key={post.slug}
+              href={`/blog/${post.slug}`}
+              className="rounded-lg border border-stone-200 bg-white p-5 shadow-soft transition hover:-translate-y-1 hover:border-sindoor/30"
+            >
+              <p className="text-sm font-semibold text-mehendi">{post.readTime}</p>
+              <h3 className="mt-3 text-xl font-black text-ink">{post.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-stone-600">{post.excerpt}</p>
+            </Link>
+          ))}
+        </div>
+      </Section>
 
       <Section>
         <div className="mx-auto max-w-3xl text-center">

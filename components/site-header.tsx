@@ -4,6 +4,7 @@ import { HeartHandshake, ShieldCheck } from "lucide-react";
 const navItems = [
   { href: "/profiles", label: "Profiles" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/blog", label: "Blog" },
   { href: "/requests", label: "Requests" },
   { href: "/subscription", label: "Membership" },
   { href: "/admin", label: "Admin" }
