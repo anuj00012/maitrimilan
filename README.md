@@ -42,6 +42,7 @@ npm run dev
 1. Create a Supabase project.
 2. In SQL Editor, run `supabase/schema.sql`.
 3. Then run `supabase/rls-policies.sql`.
+4. For the custom email/password auth and Basic subscription system, run `supabase/custom-auth-subscriptions.sql`.
 4. Create your first admin user by registering in the app.
 5. Copy that user's UUID from Supabase Authentication > Users.
 6. Replace the placeholder UUID in `supabase/seed-admin.sql`.
@@ -50,14 +51,18 @@ npm run dev
 The schema creates these tables:
 
 - `users`
+- `plans`
 - `profiles`
 - `profile_photos`
 - `verification_documents`
 - `subscriptions`
+- `payments`
+- `contact_unlocks`
 - `interests`
 - `matches`
 - `messages`
 - `reports`
+- `profile_views`
 - `admin_users`
 
 Storage buckets:
@@ -90,11 +95,32 @@ In Supabase, enable Realtime for the `messages` table:
 
 1. Create Razorpay API keys from Razorpay Dashboard.
 2. Add keys to `.env.local` and Vercel environment variables.
-3. The app creates orders in `app/api/razorpay/order/route.ts`.
-4. The app verifies checkout signatures in `app/api/razorpay/verify/route.ts`.
-5. Successful verification activates a `premium_annual` subscription for 1 year.
+3. The app creates Basic plan orders in `app/api/payments/create-order/route.ts`.
+4. The app verifies checkout signatures in `app/api/payments/verify/route.ts`.
+5. Successful backend verification creates an active subscription and calculates `end_date`.
 
 For production, also add a Razorpay webhook for `payment.captured` and reconcile subscriptions server-side for stronger payment reliability.
+
+## Custom Auth Setup
+
+The `/register` and `/login` pages use a custom PostgreSQL-backed auth flow:
+
+- Passwords are hashed with bcrypt.
+- Email verification tokens are stored in `users`.
+- Verification redirects to `/login?verified=true`.
+- Login is blocked until `email_verified = true`.
+- Sessions use a secure HTTP-only JWT cookie.
+
+Required production variables:
+
+```bash
+DATABASE_URL=postgresql://postgres:password@db.your-project-ref.supabase.co:5432/postgres
+JWT_SECRET=replace-with-a-long-random-secret
+RESEND_API_KEY=optional-for-real-email-delivery
+EMAIL_FROM=MaitriMilan <noreply@your-domain.com>
+```
+
+If `RESEND_API_KEY` is empty, verification links are printed to server logs instead of being emailed.
 
 ## Vercel Deployment
 
@@ -106,6 +132,10 @@ For production, also add a Razorpay webhook for `payment.captured` and reconcile
 NEXT_PUBLIC_SITE_URL=https://your-domain.com
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+DATABASE_URL=...
+JWT_SECRET=...
+RESEND_API_KEY=...
+EMAIL_FROM=...
 NEXT_PUBLIC_RAZORPAY_KEY_ID=...
 RAZORPAY_KEY_ID=...
 RAZORPAY_KEY_SECRET=...
